@@ -24,6 +24,8 @@
   :serial t
   :components ((:file "package")
                (:file "utils")
+               (:file "fake-package")
+               (:file "dspec")
                (:file "representation")
                (:file "toplevel")
                (:file "syntax")
