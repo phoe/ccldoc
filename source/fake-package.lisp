@@ -17,11 +17,15 @@
 #|
 CCLDoc needs to be able to support symbols which are not present in the current
 Common Lisp image but are nonetheless mentioned in the documentation.
+
 For this purpose, CCLDoc has a horrible kludge that works, but will very likely
 interact with other Lisp code that defines packages.
+
 If CCLDoc encounters a missing package, it will create that package.
+
 If CCLDoc encounters a symbol that does not exist or is not external in a given
 package, it will intern and export that symbol.
+
 TODO: make it possible to clean these packages up after compilation. It will
 require all documents which hold symbols in these packages to be invalidated,
 as the symbols held in them will lose their home packages because of that.
@@ -48,14 +52,14 @@ The BODY may be evaluated multiple times and therefore should not contain any
 side effects."
   `(loop
      (handler-case (return (progn ,@body))
-       (package-error (c)
+       ((and package-error (not external-symbol-not-found)) (c)
          (let ((package-name (package-error-package c)))
            (unless (and package-name (not (find-package package-name)))
              (error c))
-           (make-ccldoc-package pkg-name)))
+           (make-ccldoc-package package-name)))
        (external-symbol-not-found (c)
-         (let ((name (external-symbol-not-found-symbol-name c))
+         (let ((symbol-name (external-symbol-not-found-symbol-name c))
                (package (external-symbol-not-found-package c)))
-           (unless (member package *ccldoc-fake-packages*)
+           (unless (member (find-package package) *ccldoc-fake-packages*)
              (error c))
-           (export (intern name package) package))))))
+           (export (intern symbol-name package) package))))))

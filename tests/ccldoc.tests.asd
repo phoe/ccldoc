@@ -12,26 +12,14 @@
 ;;; See the License for the specific language governing permissions and
 ;;; limitations under the License.
 
-(defsystem "ccldoc"
+(defsystem "ccldoc.tests"
   :author "Clozure Associates and contributors"
-  :description "Create Lisp documentation using S-expressions"
+  :description "Tests for CCLDoc"
   :license "Apache License 2.0"
-  :depends-on ("alexandria"
-               "split-sequence"
-               "s-xml"
-               "cl-who"
+  :depends-on ("ccldoc"
+               "alexandria"
                "external-symbol-not-found"
                #-ccl "ccl-compat")
   :serial t
   :components ((:file "package")
-               (:file "utils")
-               (:file "fake-package")
-               (:file "dspec")
-               (:file "representation")
-               (:file "toplevel")
-               (:file "syntax")
-               (:file "output/docbook")
-               (:file "output/tracwiki")
-               (:file "output/html")
-               (:file "output/latex")
-               (:file "output/ccldoc")))
+               (:file "fake-package")))
