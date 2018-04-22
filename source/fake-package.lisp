@@ -48,9 +48,9 @@ The BODY may be evaluated multiple times and therefore should not contain any
 side effects."
   `(loop
      (handler-case (return (progn ,@body))
-       (no-such-package (c)
-         (let ((pkg-name (package-error-package c)))
-           (unless (and (stringp pkg-name) (not (find-package pkg-name)))
+       (package-error (c)
+         (let ((package-name (package-error-package c)))
+           (unless (and package-name (not (find-package package-name)))
              (error c))
            (make-ccldoc-package pkg-name)))
        (external-symbol-not-found (c)
