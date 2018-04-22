@@ -57,7 +57,7 @@ side effects."
            (unless (and package-name (not (find-package package-name)))
              (error c))
            (make-ccldoc-package package-name)))
-       (external-symbol-not-found (c)
+       ((and (not package-error) external-symbol-not-found) (c)
          (let ((symbol-name (external-symbol-not-found-symbol-name c))
                (package (external-symbol-not-found-package c)))
            (unless (member (find-package package) *ccldoc-fake-packages*)
