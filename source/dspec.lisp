@@ -32,16 +32,17 @@
   function)
 
 (defun register-dspec-type (type parent-type type-name id-prefix function)
-  (cassert (keywordp type))
-  (cassert (or (null parent-type) (keywordp parent-type)))
+  (assert (keywordp type))
+  (assert (or (null parent-type) (keywordp parent-type)))
   (when id-prefix
-    (cassert (and (stringp id-prefix)
-                  (> (length id-prefix) 0)
-                  (alpha-char-p (char id-prefix 0))
-                  (every (lambda (c) (or (alphanumericp c) (find c "_-."))) id-prefix))
-             "Invalid id-prefix: ~s" id-prefix))
+    (assert (and (stringp id-prefix)
+                 (> (length id-prefix) 0)
+                 (alpha-char-p (char id-prefix 0))
+                 (every (lambda (c) (or (alphanumericp c) (find c "_-.")))
+                        id-prefix))
+            () "Invalid id-prefix: ~S" id-prefix))
   (when function
-    (cassert (or (symbolp function) (typep function 'function))))
+    (assert (or (symbolp function) (typep function 'function))))
   (let* ((info (make-dspecinfo :type type
                                :type-name type-name
                                :id-prefix id-prefix
@@ -176,7 +177,7 @@
 
 ;; This is called with type and name as specified by the user, either in the docentry or in a reference to one.
 (defun make-dspec (type name)
-  (cassert (symbolp (desym type)))
+  (assert (symbolp (desym type)))
   (let* ((ctype (intern (string type) :keyword))
          (cname (canonicalize-definition-name ctype name)))
     (unless cname
@@ -197,8 +198,6 @@
   (and (dspecp name) (eq (dspec-type name) t)))
 
 (defun dspec-subtypep (type super)
-  #+gz (cassert (assq type *dspec-types*))
-  #+gz (cassert (or (eq super t) (assq super *dspec-types*)))
   (or (eq super t)
       (eq type super)
       (when-let (parent (parent-type-for-dspec-type type))

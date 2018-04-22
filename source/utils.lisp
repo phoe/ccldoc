@@ -14,13 +14,6 @@
 
 (in-package :ccldoc)
 
-(defmacro cassert (form &rest error-args)
-  `(unless ,form
-     (restart-case (error ,@(or error-args `("Assertion failed ~s" ',form)))
-       (continue ()
-         :report "Ignore the assertion"
-         nil))))
-
 (defun gensymp (thing)
   "Returns true iff THING is a gensym (an uninterned symbol)."
   (and (symbolp thing) (null (symbol-package thing))))

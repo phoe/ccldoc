@@ -170,7 +170,7 @@
   (error "Glossary entry outside glossary section??"))
 
 (defmethod write-tracwiki ((clause block) stream)
-  (cassert (not *nowiki-context*))
+  (assert (not *nowiki-context*))
   (let ((*wiki-indent* (+ *wiki-indent* 1)))
     (wiki-freshline stream)
     (when-let (title (clause-title clause))
@@ -181,14 +181,14 @@
   (terpri stream))
 
 (defmethod write-tracwiki ((clause code-block) stream)
-  (cassert (not *nowiki-context*))
+  (assert (not *nowiki-context*))
   (terpri stream)
   (write-nowiki :triple (clause-body clause) stream)
   (terpri stream))
 
 (defmethod write-tracwiki ((clause para) stream)
-   ;; might have to handle this cause, since we just turn blank lines into paragraphs.
-  (cassert (not *nowiki-context*))
+  ;; might have to handle this cause, since we just turn blank lines into paragraphs.
+  (assert (not *nowiki-context*))
   (write-tracwiki (clause-body clause) stream)
   (wiki-blankline stream))
 
@@ -204,23 +204,23 @@
   (setq *wiki-inline* t))
 
 (defmethod write-tracwiki ((clause table) stream)
-  (cassert (not *nowiki-context*))
+  (assert (not *nowiki-context*))
   (loop for row across (clause-items clause) for i upfrom 0
-    do (wiki-freshline stream)
-    do (write-tracwiki row stream))
+        do (wiki-freshline stream)
+        do (write-tracwiki row stream))
   (terpri stream))
 
 (defmethod write-tracwiki ((clause row) stream)
-  (cassert (not *nowiki-context*))
+  (assert (not *nowiki-context*))
   (let ((headp (eq clause (aref (clause-items (clause-parent clause)) 0))))
     (wiki-freshline stream)
     (write-string "||" stream)
     (loop for item across (clause-items clause)
-      do (when item
-           (when headp (write-string "= " stream))
-           (write-tracwiki item stream)
-           (when headp (write-string " =" stream)))
-      do (write-string "||" stream))
+          do (when item
+               (when headp (write-string "= " stream))
+               (write-tracwiki item stream)
+               (when headp (write-string " =" stream)))
+          do (write-string "||" stream))
     (terpri stream)))
 
 (defmethod write-tracwiki ((clause link) stream)
@@ -230,7 +230,7 @@
   (setq *wiki-inline* t))
 
 (defmethod write-tracwiki ((clause listing) stream)
-  (cassert (not *nowiki-context*))
+  (assert (not *nowiki-context*))
   ;; Unfortunately tracwiki doesn't seem to be able to nest lists inside blockquotes,
   ;; so this comes out looking sucky in definitions.
   (let* ((type (listing-type clause))
@@ -241,18 +241,18 @@
                    (:number "1. ")
                    ((:column :definition) " "))))
     (loop for item across (clause-items clause)
-      do (wiki-freshline stream)
-      do (when prefix (write-string prefix stream))
-      do (let ((*wiki-indent* (+ *wiki-indent* (length prefix))))
-           (write-tracwiki item stream))
-      do (when (eq type :column)
-           (write-string "[[BR]]" stream)))
+          do (wiki-freshline stream)
+          do (when prefix (write-string prefix stream))
+          do (let ((*wiki-indent* (+ *wiki-indent* (length prefix))))
+               (write-tracwiki item stream))
+          do (when (eq type :column)
+               (write-string "[[BR]]" stream)))
     (terpri stream)
     (terpri stream)
     (wiki-blankline stream)))
 
 (defmethod write-tracwiki ((clause term-item) stream)
-  (cassert (not *nowiki-context*))
+  (assert (not *nowiki-context*))
   (wiki-freshline stream)
   (write-tracwiki (clause-term clause) stream)
   (write-string ":: " stream)
@@ -261,12 +261,12 @@
   (setq *wiki-inline* t))
 
 (defmethod write-tracwiki ((clause item) stream)
-  (cassert (not *nowiki-context*))
+  (assert (not *nowiki-context*))
   (write-tracwiki (clause-body clause) stream)
   (setq *wiki-inline* t))
 
 (defmethod write-tracwiki ((clause definition) stream)
-  (cassert (not *nowiki-context*))
+  (assert (not *nowiki-context*))
   (wiki-freshline stream)
   (format stream "[=#~a] " (clause-external-id clause))
   (format stream "~%{{{
@@ -287,7 +287,7 @@
 
 (defmethod write-tracwiki ((clause xref) stream)
   ;; tracwiki doesn't allow formatting within link.
-  ;; And it doesn't allow links within nowiki sections, 
+  ;; And it doesn't allow links within nowiki sections,
   (with-markup (stream (format nil "[#~a " (clause-external-id (xref-target clause))) "]")
     (write-tracwiki (clause-text (or (clause-body clause) (xref-default-body clause))) stream))
   (setq *wiki-inline* t))

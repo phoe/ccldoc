@@ -19,7 +19,7 @@
 ;;; Operator and expander definitions
 
 (def-expander document (title-and-options &rest sections)
-  (cassert (null *parent-clause*))
+  (assert (null *parent-clause*))
   `(defsection ,title-and-options ,@sections))
 
 ;; Used both as a chapter definition and as a reference to a chapter, dependng on context.
@@ -30,7 +30,8 @@
     (progn
       `(defsection ,title-and-options ,@sections))
     (progn
-      (cassert (null sections) "No arguments allowed in chapter reference: ~s" sections)
+      (assert (null sections) ()
+              "No arguments allowed in chapter reference: ~S" sections)
       `(ref (chapter ,title-and-options)))))
 
 (def-expander section (title-and-options &rest parent-spec)
@@ -121,7 +122,7 @@
 ;; Quoted string means doesn't contain any ccldoc { markup }
 ;;  TODO: should we allow arbitrary sexp's and replace with prin1-to-string?
 (def-operator quote (string)
-  (cassert (stringp string))
+  (assert (stringp string))
   string)
 
 (defun parse-arg-and-options (arg-and-options &key (options nil) (type t))
@@ -131,8 +132,8 @@
          (specified-options (if (listp arg-and-options) (cdr arg-and-options) nil))
          (bad (loop for key in specified-options by #'cddr unless (member key options) collect key))
          (option-values (loop for key in options collect (getf specified-options key))))
-    (cassert (typep arg type) "Argument ~s is not of type ~s" arg type)
-    (cassert (not bad) "Invalid options ~s" bad)
+    (assert (typep arg type) () "Argument ~S is not of type ~S" arg type)
+    (assert (not bad) () "Invalid options ~S" bad)
     (values-list (cons arg option-values))))
 
 ;; TODO: only sections allowed inside CHAPTER.
@@ -145,19 +146,20 @@
       (para-subforms-to-body clause subforms))))
 
 (def-operator glossary-section (title-and-options &rest subforms)
-  (cassert (eql (section-level *parent-clause*) 0) "Glossary must be at chapter level")
+  (assert (eql (section-level *parent-clause*) 0) ()
+          "Glossary must be at chapter level")
   (multiple-value-bind (title) (parse-arg-and-options title-and-options :type 'string :options ())
     (let ((sect (make-instance 'glossary-section :title (normalize-title title))))
       (para-subforms-to-body sect subforms)
       ;; there should be nothing in the glossary except the entries, which are handled separately.
-      (cassert (null (clause-body sect)))
+      (assert (null (clause-body sect)))
       sect)))
 
 (defun collect-glossary-entries (doc)
   (let* ((sect (glossary-section doc))
          (entries (matching-clauses doc (lambda (clause) (typep clause 'glossentry)))))
     (if (not sect)
-      (cassert (null entries) "Missing glossary section")
+      (assert (null entries) () "Missing glossary section")
       (when entries
         (setf (clause-body sect) (if (cdr entries)
                                    (sort entries #'string-lessp :key #'clause-name)
@@ -165,7 +167,8 @@
 
 ;; TODO: get rid of this and add :index-title option to book.
 (def-operator index-section (title-and-options)
-  (cassert (eql (section-level *parent-clause*) 0) "Index must be at chapter level")
+  (assert (eql (section-level *parent-clause*) 0)
+          () "Index must be at chapter level")
   (multiple-value-bind (title) (parse-arg-and-options title-and-options :type 'string :options ())
     (make-instance 'index-section :title (normalize-title title))))
 
@@ -235,7 +238,7 @@
 
 (def-operator row (&rest items)
   :parser-types (:text)
-  (cassert (typep *parent-clause* 'table))
+  (assert (typep *parent-clause* 'table))
   (subforms-to-items (make-instance 'row) items))
 
 (def-operator table (title-and-options head-row &rest rows)
@@ -249,7 +252,7 @@
 (def-operator item (&rest forms)
   (let* ((parent *parent-clause*)
          (split (position-if #'(lambda (x) (operator= x :=>)) forms)))
-    (cassert (typep parent 'clause-with-items))
+    (assert (typep parent 'clause-with-items))
     (if (and (typep parent 'listing) (eq (listing-type parent) :definition))
       (let ((term-forms (subseq forms 0 split))
             (defn-forms (and split (subseq forms (1+ split))))
@@ -257,7 +260,8 @@
         (setf (slot-value item 'term) (subforms-clause item term-forms))
         (para-subforms-to-body item defn-forms))
       (let ((item (make-instance 'item)))
-        (cassert (null split) "=> can only appear in definition listing items")
+        (assert (null split)
+                () "=> can only appear in definition listing items")
         (if (and (typep parent 'listing)
                  (not (memq (listing-type parent) '(:column))))
           (para-subforms-to-body item forms)
@@ -299,18 +303,18 @@
                (list title)
                (let* ((title (normalize-title title))
                       (titles (nreconc (let ((split (loop for start = 0 then (+ pos 2)
-                                                      for pos = (search "::" title :start2 start)
-                                                      collect (and (< start (or pos (length title)))
-                                                                   (subseq title start pos))
-                                                      while pos)))
+                                                          for pos = (search "::" title :start2 start)
+                                                          collect (and (< start (or pos (length title)))
+                                                                       (subseq title start pos))
+                                                          while pos)))
                                          (when (equal (car split) ".")
                                            (setf (car split) :document))
                                          split)
                                        (loop for (in parent) on parent-specs by #'cddr
-                                         do (cassert (eq in :in))
-                                         collect parent))))
-                 (cassert (stringp (car titles)))
-                 (cassert (every #'stringp (butlast titles)))
+                                             do (assert (eq in :in))
+                                             collect parent))))
+                 (assert (stringp (car titles)))
+                 (assert (every #'stringp (butlast titles)))
                  (cond ((operator= op-name :chapter)
                         (when (cdr titles)
                           (error "Invalid chapter name ~s" name)))
@@ -326,7 +330,7 @@
 
 (def-operator link (url &rest forms)
   :parser-types (:identifier :text)
-  (cassert (stringp url))
+  (assert (stringp url))
   (let ((link (make-instance 'link :url url)))
     (setf (clause-body link) (or (subforms-clause link forms) url))
     link))
@@ -366,8 +370,8 @@
 (defun subforms-items (parent forms type)
   (let* ((*parent-clause* parent)
          (items (loop for form in forms as item = (form-clause form)
-                  do (cassert (or (null item) (typep item type) (typep item 'docerror)))
-                  collect item)))
+                      do (assert (or (null item) (typep item type) (typep item 'docerror)))
+                      collect item)))
     (coerce items 'vector)))
 
 

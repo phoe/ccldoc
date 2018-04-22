@@ -118,7 +118,9 @@
   (let* ((name (clause-name clause))
          (doc (clause-document clause))
          (old (gethash name (named-clauses doc))))
-    (cassert (not old) "Duplicate clause name ~s: ~s and ~s" name (type-of old) (type-of clause))
+    (assert (not old) ()
+            "Duplicate clause name ~S: ~S and ~S"
+            name (type-of old) (type-of clause))
     (setf (gethash name (named-clauses doc)) clause)))
 
 (defclass clause-with-title (clause-object)
@@ -146,7 +148,7 @@
   ((body :type clause)))
 
 (defclass clause-with-term (clause-object)
-  ((term :initarg :term :type (or null clause) :reader clause-term)))  
+  ((term :initarg :term :type (or null clause) :reader clause-term)))
 (defmethod subclause-slots append ((clause clause-with-term)) '(term))
 
 ;; This is a clause with items -- a sequence of clauses where the position matters,
@@ -306,7 +308,7 @@
    (external-ids :initform (make-hash-table :test #'equal) :reader external-ids)))
 
 (defmethod clause-document ((clause document))
-  (cassert (null (clause-parent clause)))
+  (assert (null (clause-parent clause)))
   clause)
 
 (defun named-clauses-count (doc) (hash-table-count (named-clauses doc)))
@@ -316,8 +318,10 @@
 
 (defun find-clause (doc fn &optional (errorp t))
   (let ((matches (matching-clauses doc fn)))
-    (cassert (null (cdr matches)) "Multiple clauses matching ~s in ~s" fn doc)
-    (cassert (or matches (not errorp)) "There is no clause matching ~s in ~s" fn doc)
+    (assert (null (cdr matches))
+            () "Multiple clauses matching ~S in ~S" fn doc)
+    (assert (or matches (not errorp))
+            () "There is no clause matching ~S in ~S" fn doc)
     (car matches)))
 
 
@@ -360,7 +364,6 @@
 
 ;; Compute the fully-qualified version of name - used to look for exact match before dwimming
 (defun as-fully-qualified-name (doc name)
-  #+gz (cassert (canonical-clause-name-p name))
   (cond ((or (null name)
              (dspecp name)
              (stringp name))
@@ -447,9 +450,7 @@
                     (map nil #'resolve thing))
                    (t
                     (loop for slot in (subclause-slots thing)
-                      do (resolve (slot-value thing slot)))
+                          do (resolve (slot-value thing slot)))
                     (when (typep thing 'reference-placeholder)
                       (resolve-placeholder thing))))))
     (resolve doc)))
-
-

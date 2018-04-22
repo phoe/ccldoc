@@ -64,14 +64,14 @@
                     (*current-file* (and default-file (merge-pathnames default-file))) ;; default for INCLUDE's.
                     (*section-package* (find-package :cl-user)))
                (form-clause doc-form))))
-    (cassert (typep doc 'document))
+    (assert (typep doc 'document))
     (collect-glossary-entries doc)
     (resolve-xref-targets doc)
     (assign-external-ids doc)
     doc))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 
+;;;
 ;;; operators
 ;;;
 
@@ -146,7 +146,7 @@
   (loop
     (when (stringp (setq form (desym form)))
       (setq form (parse-ccldoc-string form)))
-    (cassert (listp form))
+    (assert (listp form))
     (let ((expander (ccldoc-macro-expander (car form))))
       (unless expander (return form))
       (setq form (funcall expander form nil)))))
@@ -155,13 +155,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Strings with embedded directives
-;;; 
+;;;
 ;;; ccldoc strings can be used anywhere a clause is allowed and they can can contain embedded directives.
 ;;; Embedded directives take the form {command args...}.  Args... may contain nested embedded directives.
 ;;; Curly braces are special in ccldoc strings and there is no way to escape or quote them.  If you need to
 ;;; reference a curly brace in a text string, use the lisp QUOTE syntax.  The command and any lisp args
 ;;; are read using the compile-time *package* and *readtable*.
-;;; 
+;;;
 
 (defun string-chunk (string start &optional end)
   (let* ((max-end (+ start 50))
@@ -202,7 +202,7 @@
                             (endpos (or (end-delim-pos string (1+ startpos))
                                         (error "Unclosed directive: ~s..." (string-chunk string startpos))))
                             (middle (multiple-value-bind (command nextpos) (lisp-from-string string :start (1+ startpos))
-                                      (cassert (non-nil-symbolp command) "Invalid directive: ~s" (string-chunk string startpos nextpos))
+                                      (assert (non-nil-symbolp command) () "Invalid directive: ~s" (string-chunk string startpos nextpos))
                                       (let ((parser (or (ccldoc-string-parser command)
                                                         (error "Unknown directive ~s" command))))
                                         (funcall parser command string nextpos endpos))))
@@ -218,8 +218,8 @@
            (find-blank (string start)
              (when-let ((lpos (position #\Newline string :start start)))
                (if-let (epos (position #\Newline string :from-end T
-                                       :start (1+ lpos)
-                                       :end (position-if-not #'whitespacep string :start lpos)))
+                                                        :start (1+ lpos)
+                                                        :end (position-if-not #'whitespacep string :start lpos)))
                  (values lpos (1+ epos))
                  (find-blank string (1+ lpos)))))
            (breakup (string start)
@@ -238,22 +238,22 @@
     (let* ((pos start)
            (types argtypes)
            (args (loop while types for type = (pop types)
-                   until (eql pos endpos)
-                   collect (ecase type
-                             (:lisp
-                              (multiple-value-bind (arg nextpos) (lisp-from-string string :start pos :end endpos)
-                                (setq pos nextpos)
-                                arg))
-                             (:identifier
-                              (let* ((nextpos (or (position-if #'whitespacep string :start pos :end endpos) endpos))
-                                     (arg (subseq string pos nextpos)))
-                                (cassert (or (< pos nextpos) (eql pos endpos)))
-                                (setq pos (or (position-if-not #'whitespacep string :start nextpos :end endpos) endpos))
-                                arg))
-                             ((:string :text)
-                              (cassert (null types)) ;; must be last type, since means read to end.
-                              (subseq string pos (setq pos endpos)))))))
-      (cassert (eql pos endpos) "Too many arguments for ~s in ~s" command (string-chunk string start endpos))
+                       until (eql pos endpos)
+                       collect (ecase type
+                                 (:lisp
+                                  (multiple-value-bind (arg nextpos) (lisp-from-string string :start pos :end endpos)
+                                    (setq pos nextpos)
+                                    arg))
+                                 (:identifier
+                                  (let* ((nextpos (or (position-if #'whitespacep string :start pos :end endpos) endpos))
+                                         (arg (subseq string pos nextpos)))
+                                    (assert (or (< pos nextpos) (eql pos endpos)))
+                                    (setq pos (or (position-if-not #'whitespacep string :start nextpos :end endpos) endpos))
+                                    arg))
+                                 ((:string :text)
+                                  (assert (null types)) ;; must be last type, since means read to end.
+                                  (subseq string pos (setq pos endpos)))))))
+      (assert (eql pos endpos) () "Too many arguments for ~S in ~S" command (string-chunk string start endpos))
       `(,command ,@args))))
 
 
@@ -264,7 +264,7 @@
 (defun assign-external-ids (doc)
   (let ((hash (external-ids doc))
         (dups nil))
-    (cassert (eql 0 (hash-table-count hash)))
+    (assert (eql 0 (hash-table-count hash)))
     (maphash (lambda (name clause)
                (declare (ignore name))
                (unless (eq clause doc)
@@ -278,9 +278,9 @@
              hash)
     ;; The disambiguated ids are unique in each group, but make sure no global conflict.
     (loop for (clause . id) in dups
-      do (when (gethash id hash)
-           (error "Failed to disambiguate external id for ~s and ~s" (gethash id hash) clause))
-      do (setf (gethash id hash) clause))
+          do (when (gethash id hash)
+               (error "Failed to disambiguate external id for ~s and ~s" (gethash id hash) clause))
+          do (setf (gethash id hash) clause))
     (maphash (lambda (id clause) (setf (clause-external-id clause) id)) hash)
     nil))
 
@@ -326,7 +326,7 @@
   (cond ((dspecp name)
          (concatenate 'string
                       (id-prefix-for-dspec-type (dspec-type name))
-                      ;; TODO: what about packages? 
+                      ;; TODO: what about packages?
                       (norm-for-external-id #\_ (external-id-string (dspec-name name)))))
         ((stringp name)
          (norm-for-external-id #\_ name))
@@ -348,15 +348,15 @@
 (defun external-id-string (lisp-name)
   (labels ((despec (string alist)
              (loop for (spec . rep) in alist
-               as pos = (search spec string) until pos
-               finally (return (when pos
-                                 (let ((end1 pos)
-                                       (start2 (+ pos (length spec))))
-                                   (when (and (> end1 0) (alphanumericp (char string (1- end1))))
-                                     (setq rep (concatenate 'string "_" rep)))
-                                   (when (and (< start2 (length string)) (alphanumericp (char string start2)))
-                                     (setq rep (concatenate 'string rep "_")))
-                                   (setq string (despec (concatenate 'string (subseq string 0 end1) rep (subseq string start2)) alist))))))
+                   as pos = (search spec string) until pos
+                   finally (return (when pos
+                                     (let ((end1 pos)
+                                           (start2 (+ pos (length spec))))
+                                       (when (and (> end1 0) (alphanumericp (char string (1- end1))))
+                                         (setq rep (concatenate 'string "_" rep)))
+                                       (when (and (< start2 (length string)) (alphanumericp (char string start2)))
+                                         (setq rep (concatenate 'string rep "_")))
+                                       (setq string (despec (concatenate 'string (subseq string 0 end1) rep (subseq string start2)) alist))))))
              string))
     (if (stringp lisp-name)
       ;; this is for reader macros.
@@ -367,18 +367,18 @@
                          (">" . "gt") ("=" . "eq")
                          ("%" . "."))
                 )))))
-        
+
 ;; Returns a form representing the clause name NAME.
 (defun text-for-clause-name (name &optional (package *section-package*))
   (cond ((stringp name) name)
         ((dspecp name) ;; including wild
          (with-standard-io-syntax
-	   (let ((*package* package)
-		 (*print-case* :downcase))
-               (let ((lisp-name (dspec-name name)))
-                 ;; TODO: do better if lisp-name is an expression (i.e. a SETF name or METHOD name)
-                 ;; only happens for SETF names and METHOD names, very few times for now.
-                 `(code ,(prin1-to-string lisp-name))))))
+           (let ((*package* package)
+                 (*print-case* :downcase))
+             (let ((lisp-name (dspec-name name)))
+               ;; TODO: do better if lisp-name is an expression (i.e. a SETF name or METHOD name)
+               ;; only happens for SETF names and METHOD names, very few times for now.
+               `(code ,(prin1-to-string lisp-name))))))
         ;; Sigh.  This happens because we compute the reference text too early...
         ((equal name '(:index)) "Index")
         ((equal name '(:glossary)) "Glossary")

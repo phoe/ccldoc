@@ -94,7 +94,7 @@
     ,@(decompile-body clause)))
 
 (defmethod decompile-ccldoc ((clause xref))
-  `(,(default-operator clause) 
+  `(,(default-operator clause)
     ,(decompile-clause-name (clause-name (xref-target clause)))
     ,@(decompile-body clause)))
 
@@ -168,7 +168,7 @@
     (:glossary-section 1)
     (:para 0)  ;; (:text)
     (:block 1)
-    (:definition 1) ;; 
+    (:definition 1) ;;
     (:glossentry 0)
     (:system 0)    ;; (:text)
     (:sample 0)    ;; (:text)
@@ -200,7 +200,7 @@
   (when (consp form)
     (let ((offset (cadr (assoc (op-name (car form)) *form-subforms-start*)))
           (max (length form)))
-      (cassert offset "Unknown form ~s" form)
+      (assert offset () "Unknown form ~S" form)
       (min (1+ offset) max))))
 
 (defun stringyp (x) (or (stringp x) (gensymp x)))
@@ -230,18 +230,18 @@
                (return-from depara arg))
              (gensymcat (subseq str (1+ lpos) next) str))))
     (loop with result = nil
-      for form in list
-      do (cond ((and (stringyp form) (stringyp (car result)))
-                (setf (car result) (gensymcat (car result) form)))
-               ((and (parap form) (or (stringyp (car result)) (parap (car result))))
-                (cassert (or (consp (car result))
-                             ;;Actually, must have a blank line, but too tough to check.
-                             (find #\Newline (string (car result)))))
-                (setf (car result) (gensymcat (if (consp (car result)) (cadr (car result)) (car result))
-                                              '(#\Newline #\Newline)
-                                              (depara form))))
-               (t (push form result)))
-      finally (return (nreverse result)))))
+          for form in list
+          do (cond ((and (stringyp form) (stringyp (car result)))
+                    (setf (car result) (gensymcat (car result) form)))
+                   ((and (parap form) (or (stringyp (car result)) (parap (car result))))
+                    (assert (or (consp (car result))
+                                ;;Actually, must have a blank line, but too tough to check.
+                                (find #\Newline (string (car result)))))
+                    (setf (car result) (gensymcat (if (consp (car result)) (cadr (car result)) (car result))
+                                                  '(#\Newline #\Newline)
+                                                  (depara form))))
+                   (t (push form result)))
+          finally (return (nreverse result)))))
 
 (defun prettify-ccldoc (form &key (package *package*))
   (if (not (eq package *package*))
@@ -269,18 +269,18 @@
                (cond ((and (memq op '(:system :sample :param :code :emphasis)) ;; (:text)
                            (stringyp (car final))
                            (null (cdr final)))
-                      (cassert (null (cdr initial)))
+                      (assert (null (cdr initial)))
                       (gensymcat "{" (princ-to-string op) " " (car final) "}"))
                      ((memq op '(:variable :function :type :macro)) ;; (:lisp)
-                      (cassert (null final))
-                      (cassert (and (cdr initial) (null (cddr initial))))
+                      (assert (null final))
+                      (assert (and (cdr initial) (null (cddr initial))))
                       (let* ((text (prin1-to-string (cadr initial))))
                         (if (or (find #\{ text) (find #\} text))
                           pretty-form
                           (gensymcat "{" (princ-to-string op) " " text "}"))))
                      ((eq op :refdef) ;; (:lisp :lisp)
-                      (cassert (null final))
-                      (cassert (and (cddr initial) (null (cdddr initial))))
+                      (assert (null final))
+                      (assert (and (cddr initial) (null (cdddr initial))))
                       (let* ((type (prin1-to-string (cadr initial)))
                              (text (prin1-to-string (caddr initial))))
                         (if (or (find #\{ text) (find #\} text) (find #\{ type) (find #\} type))
@@ -290,7 +290,7 @@
                            (stringyp (cadr initial))
                            (evenp (length final))
                            (loop for (in ttl) on final by #'cddr
-                             always (and (operator= in :in) (stringyp ttl))))
+                                 always (and (operator= in :in) (stringyp ttl))))
                       (gensymcat "{"  (princ-to-string op)
                                  " "
                                  (format nil "~{~a~^::~}"
@@ -303,15 +303,13 @@
                            (or (null final)
                                (and (stringyp (car final))
                                     (null (cdr final)))))
-                      (cassert (null (cddr initial)))
+                      (assert (null (cddr initial)))
                       (if (null final)
                         (gensymcat "{" (princ-to-string op) " " (cadr initial) "}")
                         (gensymcat "{" (princ-to-string op) " " (cadr initial) " " (car final) "}")))
                      ((and (eq op :term) ;; (:string)
                            (null final)
                            (stringyp (cadr initial)))
-                      (cassert (null (cddr initial)))
+                      (assert (null (cddr initial)))
                       (gensymcat "{" (princ-to-string op) " " (cadr initial) "}"))
                      (t pretty-form)))))))
-
-
