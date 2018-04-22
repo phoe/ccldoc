@@ -26,9 +26,15 @@ TODO: make it possible to clean these packages up after compilation. It will
 require all documents which hold symbols in these packages to be invalidated,
 as the symbols held in them will lose their home packages because of that.
 |#
-(defvar *ccldoc-fake-packages* nil)
 
-(defun ccldoc-package (name)
+(defvar *ccldoc-fake-packages* '()
+  "A list of all CCLDoc fake packages. A package is considered fake if it has
+been created when reading CCLDoc forms by the Lisp reader operating inside the
+WITH-CCLDOC-PACKAGES macro.")
+
+(defun make-ccldoc-package (name)
+  "Creates a fake CCLDoc package with the provided NAME and adds it to the
+internal list of CCLDoc fake packages."
   (let ((package (make-package name :use nil)))
     (push package *ccldoc-fake-packages*)
     (import nil package)
@@ -46,7 +52,7 @@ side effects."
          (let ((pkg-name (package-error-package c)))
            (unless (and (stringp pkg-name) (not (find-package pkg-name)))
              (error c))
-           (ccldoc-package pkg-name)))
+           (make-ccldoc-package pkg-name)))
        (external-symbol-not-found (c)
          (let ((name (external-symbol-not-found-symbol-name c))
                (package (external-symbol-not-found-package c)))

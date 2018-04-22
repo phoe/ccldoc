@@ -141,7 +141,7 @@
   (multiple-value-bind (title package) (parse-arg-and-options title-and-options :type 'string :options '(:package))
     (let* ((clause (make-instance (if *parent-clause* 'section 'document) :title (normalize-title title) :package package))
            (*section-package* (if package
-                                (or (find-package package) (ccldoc-package package))
+                                (or (find-package package) (make-ccldoc-package package))
                                 *section-package*)))
       (para-subforms-to-body clause subforms))))
 
