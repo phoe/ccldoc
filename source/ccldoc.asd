@@ -20,6 +20,7 @@
                "split-sequence"
                "s-xml"
                "cl-who"
+               "external-symbol-not-found"
                #-ccl "ccl-compat")
   :serial t
   :components ((:file "package")

@@ -14,6 +14,12 @@
 
 (in-package :ccldoc)
 
+#|
+CCLDoc needs to be able to support symbols which are not present in the current
+Common Lisp image but are nonetheless mentioned in the documentation.
+For this purpose, CCLDoc has a horrible kludge that works, but will likely
+interact with
+|#
 ;; Need to be able to support lisp names that include symbols in packages
 ;; that don't exist in the current image.
 ;; For now, this horrible kludge...
@@ -28,19 +34,21 @@
     package))
 
 (defmacro with-ccldoc-packages (&body body)
+  "Evaluates BODY with CCLDoc-specific handlers that allow automatic creation
+of any packages or symbols that do not exist in the current Common Lisp image.
+\
+The BODY may be evaluated multiple times and therefore should not contain any
+side effects."
   `(loop
      (handler-case (return (progn ,@body))
        (no-such-package (c)
-         (let ((pkg-name (package-error-package c))) ;
+         (let ((pkg-name (package-error-package c)))
            (unless (and (stringp pkg-name) (not (find-package pkg-name)))
              (error c))
            (ccldoc-package pkg-name)))
-       ;; TODO this is CCL-specific and will fail on other implementations
-       (simple-error (c)
-         (let ((args (simple-condition-format-arguments c)))
-           (unless (and (search "No external symbol named ~S in package ~S"
-                                (simple-condition-format-control c))
-                        (member (cadr args) *ccldoc-fake-packages*)
-                        (stringp (car args)))
+       (external-symbol-not-found (c)
+         (let ((name (external-symbol-not-found-symbol-name c))
+               (package (external-symbol-not-found-package c)))
+           (unless (member package *ccldoc-fake-packages*)
              (error c))
-           (export (intern (car args) (cadr args)) (cadr args)))))))
+           (export (intern name package) package))))))

@@ -14,25 +14,31 @@
 
 (defpackage ccldoc
   (:use :cl)
-  (:import-from :alexandria
-                #:when-let* #:when-let #:if-let
-                #:starts-with-subseq)
+  (:import-from
+   :alexandria
+   #:when-let* #:when-let #:if-let
+   #:starts-with-subseq)
   (:import-from :split-sequence #:split-sequence)
   (:import-from #+:ccl :ccl
-                #-:ccl :ccl-compat
-                #:pkg-arg #:no-such-package
-                #:report-condition
-                #:definition-base-name #:definition-type-instance #:method-def-parameters
-                #:non-nil-symbolp #:setf-function-name-p
-                #:parse-macro-1
-                #:record-arglist
-                #:cheap-eval-in-environment
-                #:read-recording-source #:*loading-toplevel-location* #:*nx-source-note-map*
-                #:block-like #:progn-print #:*print-right-margin*
-                #:*show-condition-context*
-                #:assq #:whitespacep #:require-type #:neq #:memq
-                #:*loading-file-source-file* #:nfunction
-                #:*save-source-locations* #:record-source-file)
+   #-:ccl :ccl-compat
+   #:pkg-arg #:no-such-package
+   #:report-condition
+   #:definition-base-name #:definition-type-instance #:method-def-parameters
+   #:non-nil-symbolp #:setf-function-name-p
+   #:parse-macro-1
+   #:record-arglist
+   #:cheap-eval-in-environment
+   #:read-recording-source #:*loading-toplevel-location* #:*nx-source-note-map*
+   #:block-like #:progn-print #:*print-right-margin*
+   #:*show-condition-context*
+   #:assq #:whitespacep #:require-type #:neq #:memq
+   #:*loading-file-source-file* #:nfunction
+   #:*save-source-locations* #:record-source-file)
+  (:import-from
+   #:external-symbol-not-found
+   #:external-symbol-not-found
+   #:external-symbol-not-found-symbol-name
+   #:external-symbol-not-found-package)
   #-:ccl (:shadow :block)
   ;;; Syntax.  Don't really need to export these, but might as well collect them in one place
   (:export
@@ -85,10 +91,10 @@
    #:clause-with-term #:clause-term
    #:named-clause #:clause-name #:clause-external-id
    #:clause-object
-     #:clause-parent
-     #:clause-document
-     #:section-level
-     #:clause-text
+   #:clause-parent
+   #:clause-document
+   #:section-level
+   #:clause-text
    ;; type
    #:clause
    ;; dspec (definition clause-name)
