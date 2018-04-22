@@ -17,14 +17,15 @@
 #|
 CCLDoc needs to be able to support symbols which are not present in the current
 Common Lisp image but are nonetheless mentioned in the documentation.
-For this purpose, CCLDoc has a horrible kludge that works, but will likely
-interact with
+For this purpose, CCLDoc has a horrible kludge that works, but will very likely
+interact with other Lisp code that defines packages.
+If CCLDoc encounters a missing package, it will create that package.
+If CCLDoc encounters a symbol that does not exist or is not external in a given
+package, it will intern and export that symbol.
+TODO: make it possible to clean these packages up after compilation. It will
+require all documents which hold symbols in these packages to be invalidated,
+as the symbols held in them will lose their home packages because of that.
 |#
-;; Need to be able to support lisp names that include symbols in packages
-;; that don't exist in the current image.
-;; For now, this horrible kludge...
-;; TODO: make sure symbols not needed once DOM is built, and delete the
-;; fake packages once compilation done.
 (defvar *ccldoc-fake-packages* nil)
 
 (defun ccldoc-package (name)
