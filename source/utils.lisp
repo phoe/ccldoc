@@ -19,6 +19,10 @@
   (and (symbolp thing) (null (symbol-package thing))))
 
 (defun desym (thing)
+  "If THING is a gensym, returns its SYMBOL-NAME; otherwise, returns THING.
+\
+This function is CCLDoc-specific, as CCLDoc uses uninterned symbols as an
+alternative notation for strings."
   (if (gensymp thing)
     (symbol-name thing)
     thing))
