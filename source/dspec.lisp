@@ -21,15 +21,17 @@
 
 ;; a dspec is the canonicalized name of a definition.  They are used as clause name, and hence must
 ;; obey EQUALP as the equivalence relationship.
+;; TODO convert to DSPEC=
 
 (defparameter *dspec-types* nil)
 
 (defstruct (dspecinfo (:type list))
-  type ;; must be first so can use assq
-  type-name
-  id-prefix
-  parent-type
-  function)
+  type ;; KEYWORD ;; must be first so can use assq
+  type-name ;; STRING
+  id-prefix ;; STRING
+  parent-type ;; KEYWORD
+  function ;; FUNCTION-DESIGNATOR
+  )
 
 (defun register-dspec-type (type parent-type type-name id-prefix function)
   (assert (keywordp type))
