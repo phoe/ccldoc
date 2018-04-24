@@ -23,6 +23,11 @@
 ;; obey EQUALP as the equivalence relationship.
 ;; TODO convert to DSPEC=
 
+#|
+We are searching for definition specs in two ways: by their type, and by their
+name.
+|#
+
 (defparameter *dspec-types* nil)
 
 (defstruct (dspecinfo (:type list))
@@ -31,6 +36,7 @@
   id-prefix ;; STRING
   parent-type ;; KEYWORD
   function ;; FUNCTION-DESIGNATOR
+  ;; TODO: function-form that is EQUAL-comparable
   )
 
 (defun register-dspec-type (type parent-type type-name id-prefix function)
@@ -63,9 +69,6 @@
 (defun info-for-dspec-type (type)
   (or (assq type *dspec-types*) (error "Unknown dspec type ~s" type)))
 
-(defun dspec-type-name (dspec)
-  (dspecinfo-type-name (info-for-dspec-type (dspec-type dspec))))
-
 (defun id-prefix-for-dspec-type (type)
   (let ((info (info-for-dspec-type type)))
     (or (dspecinfo-id-prefix info)
@@ -85,9 +88,6 @@
 
 (defun canonicalize-definition-name (type name)
   (funcall (function-for-dspec-type type) name))
-
-(defun dspec-type-name-p (type)
-  (or (eq type t) (assq type *dspec-types*)))
 
 (defmacro ccldoc:def-definition-type (type (&optional parent-type) &key type-name id-prefix function)
   (let* ((type (and type (intern (symbol-name type) :keyword)))
@@ -165,19 +165,27 @@
   :function #'string-dspec-name)
 
 (def-definition-type :hemlock-variable ()
-  :id-prefix "hv_"
-  :function #'string-dspec-name)
+                     :id-prefix "hv_"
+                     :function #'string-dspec-name)
 
 (def-definition-type :hemlock-command ()
-  :id-prefix "hc_"
-  :function #'string-dspec-name)
+                     :id-prefix "hc_"
+                     :function #'string-dspec-name)
 
+
+(defun dspec-type-name-p (type)
+  (or (eq type t) (assq type *dspec-types*)))
 
 (defstruct (dspec (:constructor %make-dspec) (:predicate dspecp))
-  (type t :type (satisfies dspec-type-name-p))
-  name)
+  (type t :type (satisfies dspec-type-name-p)) ;; KEYWORD
+  name ;; Lisp form comparable with EQUALP
+  )
 
-;; This is called with type and name as specified by the user, either in the docentry or in a reference to one.
+(defun dspec-type-name (dspec)
+  (dspecinfo-type-name (info-for-dspec-type (dspec-type dspec))))
+
+;; This is called with type and name as specified by the user, either in the
+;; docentry or in a reference to one.
 (defun make-dspec (type name)
   (assert (symbolp (desym type)))
   (let* ((ctype (intern (string type) :keyword))
