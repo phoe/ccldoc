@@ -31,7 +31,7 @@ name.
 (defparameter *dspec-types* nil)
 
 (defstruct (dspecinfo (:type list))
-  type ;; KEYWORD ;; must be first so can use assq
+  type ;; KEYWORD ;; must be first so can use assq ;; TODO change to :NAMESPACE
   type-name ;; STRING
   id-prefix ;; STRING
   parent-type ;; KEYWORD
@@ -113,8 +113,8 @@ name.
   :id-prefix "c_"
   :function #'symbol-dspec-name)
 
-(def-definition-type :condition (:class)
-  :id-prefix "c_")
+(def-definition-type :condition (:class) ;; TODO non-portable, change to :TYPE
+                     :id-prefix "c_")
 
 (def-definition-type :function () :id-prefix "f_"
   :function (lambda (name)
@@ -204,8 +204,8 @@ name.
   ;; can't canonicalize if don't know type.
   (%make-dspec :type t :name name))
 
-(defun wild-dspec-p (name)
-  (and (dspecp name) (eq (dspec-type name) t)))
+(defun wild-dspec-p (dspec)
+  (and (dspecp dspec) (eq (dspec-type dspec) t)))
 
 (defun dspec-subtypep (type super)
   (or (eq super t)
