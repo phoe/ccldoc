@@ -105,74 +105,6 @@ name.
 (defun string-dspec-name (name)
   (and (stringp name) name))
 
-(def-definition-type :type ()
-  :id-prefix "t_"
-  :function #'identity)
-
-(def-definition-type :class (:type)
-  :id-prefix "c_"
-  :function #'symbol-dspec-name)
-
-(def-definition-type :condition (:class) ;; TODO non-portable, change to :TYPE
-                     :id-prefix "c_")
-
-(def-definition-type :function () :id-prefix "f_"
-  :function (lambda (name)
-              (let ((name (std-dspec-name 'function name)))
-                (when (or (non-nil-symbolp name) (setf-function-name-p name))
-                  name))))
-
-(def-definition-type :macro (:function)
-  :id-prefix "m_")
-
-(def-definition-type :generic-function (:function)
-  :id-prefix "f_")
-
-(def-definition-type :lap-macro (:function)
-  :id-prefix "f_")
-
-(def-definition-type :method ()
-  :id-prefix "m_"
-  :function (lambda (name)
-              (multiple-value-bind (gf-name quals specs) (method-def-parameters name)
-                (if gf-name
-                  `(,gf-name ,@quals
-                             ,(mapcar (lambda (s) (if (typep s 'class) (class-name s) s)) specs))
-                  ;; TODO: For now allow symbols because the only use we have is with symbols, but in the future disallow this.
-                  (and (symbolp name) name)))))
-
-(def-definition-type :variable ()
-  :id-prefix "v_"
-  :function #'symbol-dspec-name)
-
-(def-definition-type :reader-macro ()
-  :id-prefix "r_"
-  :function (lambda (name)
-              (if (characterp name)
-                (string name)
-                (and (typep name 'sequence)
-                     (every #'characterp name)
-                     (<= 1 (length name) 2)
-                     (coerce name 'string)))))
-
-
-(def-definition-type :package ()
-  :id-prefix "p_"
-  :function (lambda (name) (std-dspec-name 'package name)))
-
-(def-definition-type :toplevel-command ()
-  :id-prefix "tc_"
-  :function #'string-dspec-name)
-
-(def-definition-type :hemlock-variable ()
-                     :id-prefix "hv_"
-                     :function #'string-dspec-name)
-
-(def-definition-type :hemlock-command ()
-                     :id-prefix "hc_"
-                     :function #'string-dspec-name)
-
-
 (defun dspec-type-name-p (type)
   (or (eq type t) (assq type *dspec-types*)))
 
@@ -212,3 +144,35 @@ name.
       (eq type super)
       (when-let (parent (parent-type-for-dspec-type type))
         (dspec-subtypep parent super))))
+
+#|
+Possibly exported symbols:
+
+dspecinfo
+dspecinfo-type
+dspecinfo-type-name
+dspecinfo-id-prefix
+dspecinfo-parent-type
+dspecinfo-function
+register-dspec-type
+dspec-type-for-type-name
+info-for-dspec-type
+id-prefix-for-dspec-type
+parent-type
+function-for-dspec-type
+canonicalize-definition-name
+def-definition-type
+std-dspec-name
+symbol-dspec-name
+string-dspec-name
+dspec-type-name-p
+make-dspec
+dspec
+dspecp
+dspec-type
+dspec-name
+dspec-type-name
+make-wild-dspec
+wild-dspec-p
+dspec-subtypep
+|#

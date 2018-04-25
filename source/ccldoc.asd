@@ -27,6 +27,7 @@
                (:file "utils")
                (:file "fake-package")
                (:file "dspec")
+               (:file "definition-types")
                (:file "representation")
                (:file "toplevel")
                (:file "syntax")
