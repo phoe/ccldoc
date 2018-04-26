@@ -22,7 +22,7 @@
                      :id-prefix "c_"
                      :function #'symbol-dspec-name)
 
-(def-definition-type :condition (:class) ;; TODO non-portable, change to :TYPE
+(def-definition-type :condition (:type)
                      :id-prefix "c_")
 
 (def-definition-type :function () :id-prefix "f_"
@@ -40,15 +40,22 @@
 (def-definition-type :lap-macro (:function)
                      :id-prefix "f_")
 
-(def-definition-type :method ()
-                     :id-prefix "m_"
-                     :function (lambda (name)
-                                 (multiple-value-bind (gf-name quals specs) (method-def-parameters name)
-                                   (if gf-name
-                                       `(,gf-name ,@quals
-                                                  ,(mapcar (lambda (s) (if (typep s 'class) (class-name s) s)) specs))
-                                       ;; TODO: For now allow symbols because the only use we have is with symbols, but in the future disallow this.
-                                       (and (symbolp name) name)))))
+;; TODO this does not work with EQL-specializers
+(def-definition-type
+    :method ()
+    :id-prefix "m_"
+    :function (lambda (name)
+                (multiple-value-bind (gf-name quals specs)
+                    (ccl::method-def-parameters name)
+                  (if gf-name
+                    `(,gf-name
+                      ,@quals
+                      ,(mapcar
+                        (lambda (s) (if (typep s 'class) (class-name s) s))
+                        specs))
+                    ;; TODO: For now allow symbols because the only use we
+                    ;; have is with symbols, but in the future disallow this.
+                    (and (symbolp name) name)))))
 
 (def-definition-type :variable ()
                      :id-prefix "v_"

@@ -29,10 +29,11 @@ alternative notation for strings."
 
 ;; this went through many iterations, but currently settled on keywords...
 (defun op-name (sym &optional intern)
-  (and (symbolp (desym sym))
-       (if intern
-         (intern (symbol-name sym) :keyword)
-         (find-symbol (symbol-name sym) :keyword))))
+  (and (symbolp sym)
+       (not (gensymp sym))
+       (values (if intern
+                 (intern (symbol-name sym) :keyword)
+                 (find-symbol (symbol-name sym) :keyword)))))
 
 (defun operator= (operator-1 operator-2)
   "Returns true iff the two CCLDOC operator are equivalent to each other."

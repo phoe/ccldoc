@@ -19,8 +19,8 @@
 ;;; dspecs
 ;;;
 
-;; a dspec is the canonicalized name of a definition.  They are used as clause name, and hence must
-;; obey EQUALP as the equivalence relationship.
+;; a dspec is the canonicalized name of a definition.  They are used as clause
+;; name, and hence must obey EQUALP as the equivalence relationship.
 ;; TODO convert to DSPEC=
 
 #|
@@ -64,7 +64,8 @@ name.
     type))
 
 (defun dspec-type-for-type-name (type-name)
-  (dspecinfo-type (find type-name *dspec-types* :key #'dspecinfo-type-name :test #'equalp)))
+  (dspecinfo-type (find type-name *dspec-types* :key #'dspecinfo-type-name
+                                                :test #'equalp)))
 
 (defun info-for-dspec-type (type)
   (or (assq type *dspec-types*) (error "Unknown dspec type ~s" type)))
@@ -89,13 +90,6 @@ name.
 (defun canonicalize-definition-name (type name)
   (funcall (function-for-dspec-type type) name))
 
-(defmacro ccldoc:def-definition-type (type (&optional parent-type) &key type-name id-prefix function)
-  (let* ((type (and type (intern (symbol-name type) :keyword)))
-         (parent-type (and parent-type (intern (symbol-name parent-type) :keyword)))
-         (type-name (or type-name (let ((*print-case* :capitalize))
-                                    (substitute #\Space #\- (princ-to-string type))))))
-    `(register-dspec-type ,type ,parent-type ,type-name ,id-prefix ,function)))
-
 (defun std-dspec-name (ccl-type name)
   (definition-base-name (definition-type-instance ccl-type) name))
 
@@ -113,9 +107,6 @@ name.
   name ;; Lisp form comparable with EQUALP
   )
 
-(defun dspec-type-name (dspec)
-  (dspecinfo-type-name (info-for-dspec-type (dspec-type dspec))))
-
 ;; This is called with type and name as specified by the user, either in the
 ;; docentry or in a reference to one.
 (defun make-dspec (type name)
@@ -132,6 +123,9 @@ name.
         (setq cname dwimmed-cname)))
     (%make-dspec :type ctype :name cname)))
 
+(defun dspec-type-name (dspec)
+  (dspecinfo-type-name (info-for-dspec-type (dspec-type dspec))))
+
 (defun make-wild-dspec (name)
   ;; can't canonicalize if don't know type.
   (%make-dspec :type t :name name))
@@ -145,6 +139,18 @@ name.
       (when-let (parent (parent-type-for-dspec-type type))
         (dspec-subtypep parent super))))
 
+(defmacro def-definition-type
+    (type (&optional parent-type)
+     &key (type-name nil type-name-p) id-prefix function)
+  (let* ((type (and type (intern (symbol-name type) :keyword)))
+         (parent-type (and parent-type
+                           (intern (symbol-name parent-type) :keyword)))
+         (type-name (if type-name-p
+                      type-name
+                      (let ((*print-case* :capitalize))
+                        (substitute #\Space #\- (princ-to-string type))))))
+    `(register-dspec-type ,type ,parent-type ,type-name ,id-prefix ,function)))
+
 #|
 Possibly exported symbols:
 
@@ -154,18 +160,25 @@ dspecinfo-type-name
 dspecinfo-id-prefix
 dspecinfo-parent-type
 dspecinfo-function
+
 register-dspec-type
 dspec-type-for-type-name
+
 info-for-dspec-type
 id-prefix-for-dspec-type
-parent-type
+parent-type-for-dspec-type
 function-for-dspec-type
+
 canonicalize-definition-name
+
 def-definition-type
+
 std-dspec-name
 symbol-dspec-name
 string-dspec-name
+
 dspec-type-name-p
+
 make-dspec
 dspec
 dspecp
@@ -175,4 +188,5 @@ dspec-type-name
 make-wild-dspec
 wild-dspec-p
 dspec-subtypep
+
 |#
