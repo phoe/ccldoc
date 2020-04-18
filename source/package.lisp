@@ -19,7 +19,8 @@
    #:when-let* #:when-let #:if-let
    #:starts-with-subseq)
   (:import-from :split-sequence #:split-sequence)
-  (:import-from #+:ccl :ccl
+  (:import-from
+   #+:ccl :ccl
    #-:ccl :ccl-compat
    #:pkg-arg #:no-such-package
    #:report-condition
@@ -39,13 +40,12 @@
    #:external-symbol-not-found
    #:external-symbol-not-found-symbol-name
    #:external-symbol-not-found-package)
-  #-:ccl (:shadow :block)
   ;;; Syntax.  Don't really need to export these, but might as well collect them in one place
   (:export
    ;; operators
    :include-file
    :defsection :index-section :glossary-section
-   :block :code-block :glossentry :definition
+   :text-block :code-block :glossentry :definition
    :table :row :item :para
    :clause :index :link :markup :ref :quote
    ;; macros
@@ -79,7 +79,7 @@
    #:listing #:listing-type
    #:code-block
    #:markup #:markup-type
-   #:block
+   #:text-block
    #:para
    #:term-item
    #:item

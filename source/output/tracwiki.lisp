@@ -169,8 +169,8 @@
   (declare (ignore stream))
   (error "Glossary entry outside glossary section??"))
 
-(defmethod write-tracwiki ((clause block) stream)
-  (assert (not *nowiki-context*))
+(defmethod write-tracwiki ((clause text-block) stream)
+  (cassert (not *nowiki-context*))
   (let ((*wiki-indent* (+ *wiki-indent* 1)))
     (wiki-freshline stream)
     (when-let (title (clause-title clause))

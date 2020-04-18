@@ -109,7 +109,7 @@
 (defmethod generate-docbook-form ((clause string))
   clause)
 
-(defmethod generate-docbook-form ((clause block))
+(defmethod generate-docbook-form ((clause text-block))
   `(,(docbook-tag clause :|blockquote|)
     ,@(docbook-title* clause)
     ,@(generate-body-list clause)))
